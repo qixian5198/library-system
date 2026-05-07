@@ -169,6 +169,33 @@ def login():
     })
 
 
+@app.route('/api/auth/register', methods=['POST'])
+def register():
+    """用户注册"""
+    data = request.get_json()
+    username = data.get('username')
+    password = data.get('password')
+    role = data.get('role', 'reader')  # 默认为读者
+    
+    if not username or not password:
+        return jsonify({'error': '用户名和密码不能为空'}), 400
+    
+    # 检查用户名是否已存在
+    if User.query.filter_by(username=username).first():
+        return jsonify({'error': '用户名已存在'}), 400
+    
+    # 创建新用户
+    user = User(username=username, role=role)
+    user.set_password(password)
+    db.session.add(user)
+    db.session.commit()
+    
+    return jsonify({
+        'message': '注册成功',
+        'user': user.to_dict()
+    }), 201
+
+
 @app.route('/api/auth/me', methods=['GET'])
 @jwt_required()
 def get_current_user():
